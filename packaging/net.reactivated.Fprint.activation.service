@@ -1,0 +1,16 @@
+# D-Bus activation file for net.reactivated.Fprint, installed to
+# /usr/local/share/dbus-1/system-services/ -- dbus searches /usr/local/share
+# before /usr/share, so this shadows the fprintd package's copy without
+# touching it (and survives an fprintd upgrade).
+#
+# Why it is needed: gdm's greeter and pam_fprintd both ask for the bus name
+# during boot, BEFORE our unit has finished its ~12 s sensor bring-up. The
+# packaged file names the masked fprintd.service, so those early requests fail
+# outright ("Unit fprintd.service is masked") and the login screen shows no
+# fingerprint option until something asks again. Pointing activation at our
+# unit makes dbus WAIT for the name instead of failing.
+[D-BUS Service]
+Name=net.reactivated.Fprint
+Exec=/usr/bin/python3 -m synaspi.fprintd_adapter --store /var/lib/synaspi/templates
+User=root
+SystemdService=synaspi-fprintd.service

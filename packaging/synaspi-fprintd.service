@@ -1,0 +1,31 @@
+# NOT INSTALLED. This unit replaces stock fprintd on the system bus, which puts
+# it in the login path -- read packaging/README.md before enabling it.
+[Unit]
+Description=synaspi fingerprint service (net.reactivated.Fprint for SYNA8002)
+Documentation=file:///usr/local/lib/synaspi/PACKAGING.md
+# (PACKAGING.md is installed alongside the code by install-runtime.sh)
+Conflicts=fprintd.service
+# Start as early as the filesystems and the system bus allow, NOT after
+# multi-user.target: the ~12 s bring-up should overlap the rest of boot so the
+# sensor is already live by the time gdm's greeter asks for it.
+After=local-fs.target dbus.service
+
+[Service]
+Type=dbus
+BusName=net.reactivated.Fprint
+# runs entirely out of /usr/local/lib/synaspi -- no dependency on any working
+# tree, and nothing it needs is writable by the desktop user
+Environment=PYTHONPATH=/usr/local/lib/synaspi
+Environment=SYNASPI_PV_DIR=/usr/local/lib/synaspi/python-validity
+Environment=SYNASPI_RECOVERED=/usr/local/lib/synaspi/private
+ExecStart=/usr/bin/python3 -m synaspi.fprintd_adapter --store /var/lib/synaspi/templates
+# bring-up no longer runs at start -- it runs on a thread behind the bus name,
+# so "started" is just import + name ownership
+TimeoutStartSec=30
+# needs raw SPI + gpio: /dev/spidev0.0, /sys/bus/spi/..., gpiochip0
+User=root
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

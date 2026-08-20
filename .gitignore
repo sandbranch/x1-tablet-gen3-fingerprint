@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+
+# editor / OS noise
+*~
+*.swp
+.DS_Store
+.vscode/
+.idea/
+
+# working drafts — never commit
+outreach-draft.txt
