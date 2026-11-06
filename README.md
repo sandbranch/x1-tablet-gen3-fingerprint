@@ -183,3 +183,8 @@ over an SPI transport. Its `tls.py` and command layer are what made this tractab
 ## Licence
 
 MIT — see `LICENSE`. Chosen to match python-validity, which this builds on.
+
+Portions of this work build on [python-validity](https://github.com/uunicorn/python-validity),
+Copyright (c) Vladimir Semenov and contributors, also under the MIT License. The TLS and
+command layer are used from that project; the SPI transport, the SYNA8002-specific capture
+path, the image reconstruction, the matcher and the fprintd adapter are new here.
