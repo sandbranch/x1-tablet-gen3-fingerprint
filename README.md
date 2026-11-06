@@ -34,6 +34,7 @@ PROTOCOL.md         the recovered protocol — transport, secure channel, captur
 synaspi/            the driver (Python, ~3.5k lines)
 packaging/          systemd unit, D-Bus policy, install/uninstall — this is what puts it in the login path
 eval_enroll.py      offline scoring of a template set against probe and impostor sets
+NBIS-FINDINGS.md    why NBIS (mindtct/bozorth3) cannot match at this sensor area
 outreach-draft.txt  drafts of the messages accompanying this release
 ```
 
@@ -131,7 +132,8 @@ stability claim over weeks.
 Nothing re-pairs a virgin sensor, and we do not know whether that is possible.
 
 **The matcher is not authentication-grade, and we can prove it.** The image is 144×40 —
-too small for minutiae — so matching is correlation-based. Measured against real impostor
+too small for minutiae, now measured rather than assumed (see `NBIS-FINDINGS.md`) — so
+matching is correlation-based. Measured against real impostor
 fingers, the first version separated genuine from impostor by **+0.0005**, which is not
 separation at all. Natural-placement enrolment moved that to **+0.0905**, with FRR 0% /
 FAR 0% at threshold 0.35–0.40. That is a real separation, and it holds across days — but
@@ -156,10 +158,21 @@ attempt counting is not in the loop. There is a flag to disable it.
 
 ## What would need to change for libfprint
 
-Matching would move to NBIS, which deletes our weakest component — we have not yet tested
-whether `mindtct`/`bozorth3` can extract usable minutiae from a 144×40 image. `elanspi` is
-the only SPI precedent in libfprint and would define the shape. The pairing and blob
-questions above have to be answered first; see `outreach-draft.txt`.
+The obvious plan was that matching would move to NBIS, deleting our weakest component.
+**That plan does not work, and we have now tested it rather than assumed it.** NBIS cannot
+match at this sensor area: cropping clean 500 dpi reference prints down to the ~29 mm² this
+sensor sees drops `bozorth3` to zero on genuine pairs, and on our own captures `mindtct`
+finds a median of 8–12 minutiae but `bozorth3` scores 0 on all 120 genuine pairs. Usable
+separation only appears somewhere around 130–180 mm². The limit is sensor area, not image
+quality, so no amount of enhancement work changes it. Full method and numbers in
+`NBIS-FINDINGS.md`.
+
+So a libfprint driver for this part cannot simply hand up an image and rely on the stock
+matcher — it would enrol and then never match. It needs a matcher suited to small-area
+sensors (correlation-based, as here), or the device has to be driven match-on-chip.
+`elanspi` is the only SPI precedent in libfprint and would still define the shape of the
+transport. The pairing and blob questions above have to be answered first; see
+`outreach-draft.txt`.
 
 ## Credit
 
